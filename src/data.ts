@@ -15,11 +15,11 @@ export interface ParseBitData {
 export interface ParseEpisodeData {
     num: number,
     name: string,
-    streamLink: string
+    streamLink: string | null;
 };
 
 export interface ParseData {
-    timestamp: string,
+    timestamp: string | null,
     episodes: ParseEpisodeData[],
     bits: ParseBitData[]
 };
