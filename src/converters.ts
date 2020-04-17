@@ -1,9 +1,14 @@
 import { ParseData, ParseEpisodeData, ParseBitData } from "./data";
-import { Maybe, error, result, Result } from "./result";
+import { Maybe, error, result, Result, Error } from "./result";
 import * as p5 from 'parse5';
 
 function structuralNodes(n: any) {
     return n.childNodes.filter((n: any) => n.nodeName != '#text');
+}
+
+function parseBitFragment(b: any): Maybe<ParseBitData> {
+    const children = b.childNodes;
+    return error<ParseBitData>('Stub');
 }
 
 function isEpisodeFragment(n: any): boolean {
@@ -81,8 +86,31 @@ function parseEpisodeFragment(e: any): Maybe<ParseData> {
         return error<ParseData>(`Error parsing title: ${JSON.stringify(getTitle.error)}`);
     }
     const title: EpisodeTitle = (getTitle as Result<EpisodeTitle>).success;
-    console.log(title);
-    return error<ParseData>("stub");
+    const episodes: ParseEpisodeData[] = [{
+        num: title.epNum,
+        name: title.epName,
+        streamLink: linkVal
+    }];
+    let bits: ParseBitData[] = [];
+    const bitFragments: any[] = structuralNodes(bitList);
+    let err: Error<ParseData> | null = null;
+    bitFragments.forEach((f: any) => {
+        const res = parseBitFragment(f);
+        if (res.error) {
+            err = error<ParseData>(`Error parsing bit fragment: ${JSON.stringify(res.error)}`);
+        } else {
+            bits.push(res.success as ParseBitData);
+        }
+    });
+    if (err) {
+        return err;
+    } else {
+        return result<ParseData> ({
+            timestamp: null,
+            episodes,
+            bits
+        });
+    }
 }
 
 function check(n: any): Maybe<ParseData> {
