@@ -96,4 +96,9 @@ describe("Parse function", () => {
         });
     });
 
+    it("Should parse a snapshot document and find the correct number of episodes", () => {
+        const result = parseFile("content/sample-bit-glossary-4-16-20.html");
+        expect(result.episodes.length).to.equal(195);
+    });
+
 });
