@@ -95,9 +95,20 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     isLegendary: false
                 });
             }],
+        // Basic bit "lazy" notation
+        ["<li>,1;</li>", 
+            (rawName) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName,
+                    rawTimeCd: null,
+                    isHistoryRoad: false,
+                    isLegendary: false
+                });
+            }],
         // Default
         [_, () => { 
-            return error<ParseBitData>("Could not match bit pattern");
+            return error<ParseBitData>(`Could not match bit pattern '${content}'`);
         }]
     ]);
 }
