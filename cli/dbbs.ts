@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { parse } from '../src/parse/parse';
 import { ParseData } from '../src/parse/parse-data';
 import { Maybe, Result } from '../src/result';

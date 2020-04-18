@@ -2,6 +2,10 @@
   "name": "db-bit-scraper",
   "version": "0.0.1",
   "description": "Gets the bits",
+  "main": "cli/dbbs.js",
+  "bin": {
+    "dbbs": "./cli/dbbs.js"
+  },
   "directories": {
     "test": "tests"
   },
