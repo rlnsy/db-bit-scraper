@@ -106,6 +106,26 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     isLegendary: false
                 });
             }],
+        // strange malformed case - TODO this could benefit from some new match features
+        ["<li><strong>,2;</strong>,1;\n                                </li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName, rawTimeCd,
+                    isHistoryRoad: false,
+                    isLegendary: true
+                });
+            }],
+        // same here
+        ["<li><strong>[00:00:00]</strong> Ending the podcast after \\\"groove is in the\\n                                    heart\\\"</li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName, rawTimeCd,
+                    isHistoryRoad: false,
+                    isLegendary: true
+                });
+            }],
         // Default
         [_, () => { 
             return error<ParseBitData>(`Could not match bit pattern '${content}'`);
