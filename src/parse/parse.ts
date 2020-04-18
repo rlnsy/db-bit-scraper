@@ -139,7 +139,7 @@ function isEpisodeFragment(n: any): boolean {
             return false;
         }
         const children = structuralNodes(n);
-        if (children.length != 2) {
+        if (children.length < 1) {
             return false;
         }
         const header = children[0];
@@ -153,15 +153,16 @@ function isEpisodeFragment(n: any): boolean {
         if (!link.attrs || !(link.attrs instanceof Array)) {
             return false;
         }
-        const bitList = children[1];
-        if (bitList.tagName != 'ul') {
-            return false;
-        }
         return true;
     }
     catch (err) {
         return false;
     }
+}
+
+function hasBitList(e: any): boolean {
+    const children = structuralNodes(e);
+    return (children.length == 2) && (children[1].tagName == 'ul');
 }
 
 interface EpisodeTitle {
@@ -186,7 +187,7 @@ function parseEpisodeTitle(t: string): Maybe<EpisodeTitle> {
 function parseEpisodeFragment(e: any): Maybe<ParseData> {
     const children = structuralNodes(e);
     const header = children[0];
-    const bitList = children[1];
+    const bitList = hasBitList(e) ? children[1] : null;
     const link = structuralNodes(header)[0];
     let linkVal: string | null = null;
     link.attrs.forEach((a: any) => {
@@ -214,16 +215,18 @@ function parseEpisodeFragment(e: any): Maybe<ParseData> {
         streamLink: linkVal
     }];
     let bits: ParseBitData[] = [];
-    const bitFragments: any[] = structuralNodes(bitList);
     let err: Error<ParseData> | null = null;
-    bitFragments.forEach((f: any) => {
-        const res = parseBitFragment(f, title.epNum);
-        if (res.error) {
-            err = error<ParseData>(`Error parsing bit fragment: ${JSON.stringify(res.error)}`);
-        } else {
-            bits.push(res.success as ParseBitData);
-        }
-    });
+    if (bitList) {
+        const bitFragments: any[] = structuralNodes(bitList);
+        bitFragments.forEach((f: any) => {
+            const res = parseBitFragment(f, title.epNum);
+            if (res.error) {
+                err = error<ParseData>(`Error parsing bit fragment: ${JSON.stringify(res.error)}`);
+            } else {
+                bits.push(res.success as ParseBitData);
+            }
+        });
+    }
     if (err) {
         return err;
     } else {

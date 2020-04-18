@@ -87,6 +87,16 @@ describe("Parse function", () => {
         });
     });
 
+    it("Should parse an episode with no BitList", () => {
+        const result = parseFile("content/no-bits.html");
+        expect(result.episodes.length).to.equal(1);
+        expect(result.episodes[0]).to.eql({
+            num: 185,
+            name: "Greatest Bits - 2019",
+            streamLink: "https://art19.com/shows/dynamic-banter/episodes/39e15f10-9d4f-4897-9708-ad46eb17a925"
+        });
+    });
+
     it("Should parse a snapshot document and find the correct number of episodes", () => {
         const result = parseFile("content/sample-bit-glossary-4-16-20.html");
         expect(result.episodes.length).to.equal(195);
