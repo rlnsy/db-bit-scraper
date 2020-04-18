@@ -1,5 +1,5 @@
-import { ParseData, ParseEpisodeData, ParseBitData, BitTimeCode } from "./data";
-import { Maybe, error, result, Result, Error } from "./result";
+import { ParseData, ParseEpisodeData, ParseBitData, BitTimeCode } from "./parse-data";
+import { Maybe, error, result, Result, Error } from "../result";
 import * as p5 from 'parse5';
 import {_, match} from 'jmatch';
 

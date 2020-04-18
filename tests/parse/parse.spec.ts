@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import 'mocha';
 import * as fs from 'fs';
 import * as path from 'path';
-import {parse} from '../../src/converters';
-import { ParseData, ParseBitData } from '../../src/data';
+import {parse} from '../../src/parse/parse';
+import { ParseData, ParseBitData } from '../../src/parse/parse-data';
 import { Maybe, Result } from '../../src/result';
 
 function readContent(file: string): string {
