@@ -1,14 +1,105 @@
-import { ParseData, ParseEpisodeData, ParseBitData } from "./data";
+import { ParseData, ParseEpisodeData, ParseBitData, BitTimeCode } from "./data";
 import { Maybe, error, result, Result, Error } from "./result";
 import * as p5 from 'parse5';
+import {_, match} from 'jmatch';
 
 function structuralNodes(n: any) {
     return n.childNodes.filter((n: any) => n.nodeName != '#text');
 }
 
-function parseBitFragment(b: any): Maybe<ParseBitData> {
-    const children = b.childNodes;
-    return error<ParseBitData>('Stub');
+function parseTimeCode(t: string): Maybe<BitTimeCode> {
+    return match(t, [
+        ["\\[,3;\\:,2;\\:,1;\\]",
+            (secs, mins, hrs) => {
+                try {
+                    secs = Number(secs);
+                    mins = Number(mins);
+                    hrs = Number(hrs);
+                } catch (err) {
+                    return error<BitTimeCode>("Non-numeric types in timecode");
+                }
+                return result<BitTimeCode>({ secs, mins, hrs });
+            }],
+        [_, () => { 
+            return error<BitTimeCode>("Unrecognized timecode format"); }]
+    ]);
+}
+
+interface PartialBitInfo {
+    episode: number,
+    rawName: string,
+    rawTimeCd: string | null,
+    isHistoryRoad: boolean,
+    isLegendary: boolean
+}
+
+function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
+    const {episode, rawName, rawTimeCd, isHistoryRoad, isLegendary} = i;
+    let timeCd: BitTimeCode | null = null;
+    if (rawTimeCd != null) {
+        const getTime = parseTimeCode(rawTimeCd);
+        if (getTime.error) {
+            return error<ParseBitData>(JSON.stringify(getTime.error));
+        } else {
+            timeCd = (getTime as Result<BitTimeCode>).success;
+        }
+    }
+    const name: string = rawName.trim();
+    return result<ParseBitData>({
+        name, episode, timeCd, isHistoryRoad, isLegendary
+    });
+}
+
+function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
+    const content = `<li>${p5.serialize(b)}</li>`;
+    return match(content, [
+        // Lengendary bit format
+        ["<li><strong>,2;</strong> <strong>,1;</strong></li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName, rawTimeCd,
+                    isHistoryRoad: false,
+                    isLegendary: true
+                });
+            }],
+        // Regular bit
+        ["<li><strong>,2;</strong> ,1;</li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName, rawTimeCd,
+                    isHistoryRoad: false,
+                    isLegendary: false
+                });
+            }],
+        // Legendary History Road
+        ["<li><em>HR:</em> <strong>,1;</strong></li>",
+            (rawName) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName,
+                    rawTimeCd: null,
+                    isHistoryRoad: true,
+                    isLegendary: true
+                });
+            }],
+        // Non-Legendary History Road
+        ["<li><em>HR:</em> ,1;</li>", 
+            (rawName) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName,
+                    rawTimeCd: null,
+                    isHistoryRoad: true,
+                    isLegendary: false
+                });
+            }],
+        // Default
+        [_, () => { 
+            return error<ParseBitData>("Could not match bit pattern");
+        }]
+    ]);
 }
 
 function isEpisodeFragment(n: any): boolean {
@@ -95,7 +186,7 @@ function parseEpisodeFragment(e: any): Maybe<ParseData> {
     const bitFragments: any[] = structuralNodes(bitList);
     let err: Error<ParseData> | null = null;
     bitFragments.forEach((f: any) => {
-        const res = parseBitFragment(f);
+        const res = parseBitFragment(f, title.epNum);
         if (res.error) {
             err = error<ParseData>(`Error parsing bit fragment: ${JSON.stringify(res.error)}`);
         } else {

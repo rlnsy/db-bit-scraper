@@ -31,12 +31,14 @@ describe("Parse function", () => {
     it("Should parse basic bit entries", () => {
         const result = parseFile("content/basic.html");
         expect(result.bits.length).to.equal(3);
-        expect(result.bits).to.contain({
+        expect(result.bits[1]).to.eql({
             name: "Aerosmith is late for the show",
             episode: 1,
-            timeCdSec: 0,
-            timeCdMin: 5,
-            timeCdHrs: 0,
+            timeCd: {
+                secs: 30,
+                mins: 50,
+                hrs: 0,
+            },
             isHistoryRoad: false,
             isLegendary: false
         });
@@ -46,7 +48,7 @@ describe("Parse function", () => {
         const result = parseFile("content/history-road.html");
         expect(result.bits.length).to.equal(5);
         const distinct = result.bits.filter((b: ParseBitData) => {
-            b.isHistoryRoad
+            return b.isHistoryRoad
         });
         expect(distinct.length).to.equal(3);
     });
@@ -55,7 +57,7 @@ describe("Parse function", () => {
         const result = parseFile("content/legendary.html");
         expect(result.bits.length).to.equal(5);
         const distinct = result.bits.filter((b: ParseBitData) => {
-            b.isLegendary
+            return b.isLegendary
         });
         expect(distinct.length).to.equal(1);
     });
@@ -64,7 +66,7 @@ describe("Parse function", () => {
         const result = parseFile("content/legendary-history-road.html");
         expect(result.bits.length).to.equal(2);
         const distinct = result.bits.filter((b: ParseBitData) => {
-            b.isLegendary && b.isHistoryRoad
+            return b.isLegendary && b.isHistoryRoad
         });
         expect(distinct.length).to.equal(1);
     });
@@ -72,7 +74,7 @@ describe("Parse function", () => {
     it("Should parse a single episode", () => {
         const result = parseFile("content/basic.html");
         expect(result.episodes.length).to.equal(1);
-        expect(result.episodes[0]).to.equal({
+        expect(result.episodes[0]).to.eql({
             num: 1,
             name: "History Road",
             streamLink: "https://art19.com/shows/dynamic-banter/episodes/30eb876f-e279-4f95-824f-6d6a27d13217"
