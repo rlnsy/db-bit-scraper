@@ -1,24 +1,15 @@
 import { expect } from 'chai';
 import 'mocha';
-import * as fs from 'fs';
-import * as path from 'path';
 import {parse} from '../../src/parse/parse';
 import { ParseData, ParseBitData } from '../../src/parse/parse-data';
 import { Maybe, Result } from '../../src/result';
-
-function readContent(file: string): string {
-    const filePath = path.join(__dirname, file);
-    try {
-        return fs.readFileSync(
-            filePath,
-            {encoding: "utf-8"});
-    } catch (err) {
-        expect.fail("Could not load content file");
-    }
-}
+import readContent from '../util/../../util/read';
 
 function parseFile(file: string, allowError = false): ParseData {
-    const res: Maybe<ParseData> = parse(readContent(file));
+    const content: string = (readContent(__dirname, file, () => {
+        expect.fail("Could not load content file");
+    }) as string);
+    const res: Maybe<ParseData> = parse(content);
     if (res.error) {
         expect.fail(`Failed happy parse path: \n ${JSON.stringify(res.error)}`);
     } else {
