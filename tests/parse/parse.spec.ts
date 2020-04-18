@@ -97,6 +97,24 @@ describe("Parse function", () => {
         });
     });
 
+    it("Should parse a snapshot document and get all episodes sequentially", () => {
+        const result = parseFile("content/sample-bit-glossary-4-16-20.html");
+        let missing: number[] = [];
+        let prev = 0;
+        result.episodes.reverse().forEach((e) => {
+            const num = e.num;
+            if (num != prev + 1) {
+                missing.push(prev + 1);
+                prev = num;
+            } else {
+                prev++;
+            }
+        });
+        if (missing.length > 0) {
+            expect.fail(`Missing episodes [${missing}]`);
+        }
+    });
+
     it("Should parse a snapshot document and find the correct number of episodes", () => {
         const result = parseFile("content/sample-bit-glossary-4-16-20.html");
         expect(result.episodes.length).to.equal(195);
