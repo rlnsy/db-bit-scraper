@@ -2,12 +2,16 @@
  * Information schema
  */
 
+export interface BitTimeCode {
+    secs: number,
+    mins: number,
+    hrs: number
+}
+
 export interface ParseBitData {
     name: string,
     episode: number,
-    timeCdSec: number,
-    timeCdMin: number,
-    timeCdHrs: number,
+    timeCd: BitTimeCode | null,
     isHistoryRoad: boolean,
     isLegendary: boolean
 };
