@@ -36,7 +36,7 @@ function parseName(n: string): NameContent {
     // TODO modify to extract all links
     let name = n;
     let links: string[] = [];
-    const linkFmt = new RegExp("<a\\s*href=\".+\" rel=\"nofollow\">.+</a>", 's');
+    const linkFmt = new RegExp("\\s*<a\\s*href=\".+\" rel=\"nofollow\">.+</a>", 's');
     const linkMatch = linkFmt.exec(n);
     if (linkMatch) {
         const linkContent = linkMatch[0];
@@ -44,6 +44,13 @@ function parseName(n: string): NameContent {
             ["<a href=\",1;\" rel=\"nofollow\">,2;</a>",
                 (url: string, text: string) => {
                     name = n.replace(linkFmt, text);
+                    name = match(name, [
+                        ["<strong>,1;</strong>",
+                            (bolded) => {
+                                return bolded;
+                            }],
+                        [_, () => { return name; }]
+                    ]);
                     links.push(url);
                 }]
         ]);
@@ -95,9 +102,8 @@ function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
     }
 }
 
-function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
-    const content = `<li>${p5.serialize(b)}</li>`;
-    return match(content, [
+export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData> {
+    return match(b, [
         // history road with timecode case
         ["<li><strong>,2;</strong>\\s*<em>HR:</em>,1;</li>",
             (rawName, rawTimeCd) => {
@@ -131,6 +137,26 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     isHistoryRoad: false,
                     isLegendary: true
                 });
+            }],
+        // case where name contains strong tags
+        ["<li><strong>,1;</strong>\\s*.*<strong>.*</strong>.*</li>",
+            (rawTimeCd) => {
+                const noTimeCd = b.replace(
+                    new RegExp(`<strong>${
+                        rawTimeCd.replace('[', '\\[').replace(']', '\\]')
+                    }</strong>`, 'g'), '');
+                return match(noTimeCd, [
+                    ["<li>,1;</li>", 
+                        (rawName) => {
+                            return parsePartialBitInfo({
+                                episode,
+                                rawName, rawTimeCd,
+                                rawAltName: null, 
+                                isHistoryRoad: false,
+                                isLegendary: true
+                            });
+                        }]
+                    ]);
             }],
         // Regular bit
         ["<li><strong>,2;</strong>\\s*,1;</li>",
@@ -214,7 +240,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
             }],
         // Default
         [_, () => {
-            return error<ParseBitData>(`Could not match bit pattern '${content}'`);
+            return error<ParseBitData>(`Could not match bit content '${b}'`);
         }]
     ]);
 }
@@ -305,7 +331,8 @@ function parseEpisodeFragment(e: any): Maybe<ParseData> {
     if (bitList) {
         const bitFragments: any[] = structuralNodes(bitList);
         bitFragments.forEach((f: any) => {
-            const res = parseBitFragment(f, title.epNum);
+            const content = `<li>${p5.serialize(f)}</li>`;
+            const res = parseBitFragment(content, title.epNum);
             if (res.error) {
                 err = error<ParseData>(`Error parsing bit fragment: ${JSON.stringify(res.error)}`);
             } else {
