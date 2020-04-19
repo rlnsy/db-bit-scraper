@@ -31,7 +31,8 @@ describe("Parse function", () => {
                 hrs: 0,
             },
             isHistoryRoad: false,
-            isLegendary: false
+            isLegendary: false,
+            links: []
         });
     });
 
@@ -118,6 +119,15 @@ describe("Parse function", () => {
     it("Should parse a snapshot document and find the correct number of episodes", () => {
         const result = parseFile("content/sample-bit-glossary-4-16-20.html");
         expect(result.episodes.length).to.equal(195);
+    });
+
+    it("Should extract an attached image from a bit name", () => {
+        const result = parseFile("content/image.html");
+        expect(result.bits.length).to.equal(1);
+        const b = result.bits[0];
+        expect(b.links.length).to.equal(1);
+        expect(b.links[0]).to.equal("https://i.imgur.com/EKPR66e.png");
+        expect(b.name).to.eql("Victorian illustration of kidney stone removal");
     });
 
 });

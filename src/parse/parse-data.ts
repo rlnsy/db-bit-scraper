@@ -13,7 +13,8 @@ export interface ParseBitData {
     episode: number,
     timeCd: BitTimeCode | null,
     isHistoryRoad: boolean,
-    isLegendary: boolean
+    isLegendary: boolean,
+    links: string[]
 };
 
 export interface ParseEpisodeData {

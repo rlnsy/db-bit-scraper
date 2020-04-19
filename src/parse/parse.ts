@@ -1,7 +1,7 @@
 import { ParseData, ParseEpisodeData, ParseBitData, BitTimeCode } from "./parse-data";
 import { Maybe, error, result, Result, Error } from "../result";
 import * as p5 from 'parse5';
-import {_, match} from 'jmatch';
+import { _, match } from 'jmatch';
 
 function structuralNodes(n: any) {
     return n.childNodes.filter((n: any) => n.nodeName != '#text');
@@ -20,9 +20,33 @@ function parseTimeCode(t: string): Maybe<BitTimeCode> {
                 }
                 return result<BitTimeCode>({ secs, mins, hrs });
             }],
-        [_, () => { 
-            return error<BitTimeCode>("Unrecognized timecode format"); }]
+        [_, () => {
+            return error<BitTimeCode>("Unrecognized timecode format");
+        }]
     ]);
+}
+
+interface NameContent {
+    name: string,
+    links: string[]
+}
+
+function parseName(n: string): NameContent {
+    let name = n;
+    let links: string[] = [];
+    const linkFmt = new RegExp("<a href=\".+\" rel=\"nofollow\">.+</a>", 's');
+    const linkMatch = linkFmt.exec(n);
+    if (linkMatch) {
+        const linkContent = linkMatch[0];
+        match(linkContent, [
+            ["<a href=\",1;\" rel=\"nofollow\">,2;</a>",
+                (url: string, text: string) => {
+                    name = n.replace(linkFmt, text);
+                    links.push(url);
+                }]
+        ]);
+    }
+    return { name: name.trim().replace(/\s{2,}|\n/, ' '), links };
 }
 
 interface PartialBitInfo {
@@ -34,7 +58,7 @@ interface PartialBitInfo {
 }
 
 function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
-    const {episode, rawName, rawTimeCd, isHistoryRoad, isLegendary} = i;
+    const { episode, rawName, rawTimeCd, isHistoryRoad, isLegendary } = i;
     let timeCd: BitTimeCode | null = null;
     if (rawTimeCd != null) {
         const getTime = parseTimeCode(rawTimeCd);
@@ -44,9 +68,9 @@ function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
             timeCd = (getTime as Result<BitTimeCode>).success;
         }
     }
-    const name: string = rawName.trim();
+    const {name, links} = parseName(rawName);
     return result<ParseBitData>({
-        name, episode, timeCd, isHistoryRoad, isLegendary
+        name, episode, timeCd, isHistoryRoad, isLegendary, links
     });
 }
 
@@ -85,7 +109,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 });
             }],
         // Non-Legendary History Road
-        ["<li><em>HR:</em> ,1;</li>", 
+        ["<li><em>HR:</em> ,1;</li>",
             (rawName) => {
                 return parsePartialBitInfo({
                     episode,
@@ -96,7 +120,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 });
             }],
         // Basic bit "lazy" notation
-        ["<li>,1;</li>", 
+        ["<li>,1;</li>",
             (rawName) => {
                 return parsePartialBitInfo({
                     episode,
@@ -127,7 +151,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 });
             }],
         // Default
-        [_, () => { 
+        [_, () => {
             return error<ParseBitData>(`Could not match bit pattern '${content}'`);
         }]
     ]);
@@ -181,7 +205,7 @@ function parseEpisodeTitle(t: string): Maybe<EpisodeTitle> {
         return error<EpisodeTitle>(`Title '${t}' missing episode name`);
     }
     const epName = nameStrMatch[0].substr(2);
-    return result<EpisodeTitle>({epNum, epName});
+    return result<EpisodeTitle>({ epNum, epName });
 }
 
 function parseEpisodeFragment(e: any): Maybe<ParseData> {
@@ -230,7 +254,7 @@ function parseEpisodeFragment(e: any): Maybe<ParseData> {
     if (err) {
         return err;
     } else {
-        return result<ParseData> ({
+        return result<ParseData>({
             timestamp: null,
             episodes,
             bits
@@ -250,7 +274,7 @@ function check(n: any): Maybe<ParseData> {
     }
 }
 
-export function parse (content: string): Maybe<ParseData> {
+export function parse(content: string): Maybe<ParseData> {
     let episodes: ParseEpisodeData[] = [];
     let bits: ParseBitData[] = [];
     const doc: p5.DefaultTreeDocument = p5.parse(content) as p5.DefaultTreeDocument;
