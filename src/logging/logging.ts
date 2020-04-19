@@ -2,10 +2,12 @@
  * Logging tools
  */
 
+ import * as chalk from 'chalk';
+
 export const enum Levels {
-    INFO = "INFO",
-    WARN = "WARN",
-    CRIT = "CRIT"
+    INFO = "Info",
+    WARN = "Warning",
+    CRIT = "Error"
 }
 
 export interface LogDate {
@@ -35,14 +37,29 @@ function pad(timeQ: number): string {
 
 export function formatDate(): string {
     const d = getDate();
-    return `[${d.month}-${d.day}-${d.year} ` +
-            `| ${pad(d.hrs)}:${pad(d.mins)}:${pad(d.secs)}]`;
+    const date = `${d.month}-${d.day}-${d.year}`;
+    const time = `${pad(d.hrs)}:${pad(d.mins)}:${pad(d.secs)}`
+    return `[${chalk.stderr.blueBright(date)} | ${chalk.stderr.blueBright(time)}]`;
 }
 
 function formatLevel(l: Levels): string {
-    return `[${l}]`;
+    let color = null;
+    switch (l) {
+        case Levels.INFO:
+            color = chalk.stderr.blueBright;
+            break;
+        case Levels.WARN:
+            color = chalk.stderr.yellowBright;
+            break;
+        case Levels.INFO:
+            color = chalk.stderr.redBright;
+            break;
+        default:
+            color = chalk.stderr.whiteBright;
+    }
+    return `[${`${color(l)}`}]`;
 }
 
 export function log(level: Levels, msg: string): void {
-    process.stderr.write(`${formatDate()} ${formatLevel(level)}\n${msg}\n`);
+    process.stderr.write(`${formatDate()} ${formatLevel(level)} ${msg}\n`);
 }
