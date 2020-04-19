@@ -31,7 +31,7 @@ export function getDate(): LogDate {
     }
 }
 
-function pad(timeQ: number): string {
+export function pad(timeQ: number): string {
     return timeQ.toString().padStart(2, '0');
 }
 

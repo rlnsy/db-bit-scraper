@@ -3,6 +3,7 @@ import { Maybe, error, result, Result, Error } from "../result";
 import * as p5 from 'parse5';
 import { parseBitFragment } from "./bit-format";
 import {log, Levels} from '../logging/logging';
+import {createTimeStamp} from '../util/time';
 
 function structuralNodes(n: any) {
     return n.childNodes.filter((n: any) => n.nodeName != '#text');
@@ -153,7 +154,7 @@ export function parse(content: string, strackTraversal=false): Maybe<ParseData> 
         }
     }
     return result<ParseData>({
-        timestamp: null,
+        timestamp: createTimeStamp(),
         episodes, bits
     });
 }
