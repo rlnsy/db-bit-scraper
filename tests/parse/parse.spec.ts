@@ -36,13 +36,30 @@ describe("Parse function", () => {
         });
     });
 
-    it("Should distinquish history road bits", () => {
+    it("Should distinquish history road bits with no timecode", () => {
         const result = parseFile("content/history-road.html");
         expect(result.bits.length).to.equal(5);
         const distinct = result.bits.filter((b: ParseBitData) => {
             return b.isHistoryRoad
         });
         expect(distinct.length).to.equal(3);
+        distinct.forEach((b) => {
+            expect(b.timeCd).to.be.null;
+        });
+    });
+
+    it("Should distinquish history road bits with a timecode", () => {
+        const result = parseFile("content/history-road-timecode.html");
+        expect(result.bits.length).to.equal(7);
+        const distinct = result.bits.filter((b: ParseBitData) => {
+            return b.isHistoryRoad
+        });
+        expect(distinct.length).to.equal(1);
+        expect(distinct[0].timeCd).to.eql({
+            secs: 0,
+            mins: 46,
+            hrs: 0
+        });
     });
 
     it("Should distinquish legendary bits", () => {

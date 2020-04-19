@@ -119,6 +119,16 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     isLegendary: false
                 });
             }],
+        // history road with timecode case
+        ["<li><em>,2; HR:</em>,1;</li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName, rawTimeCd,
+                    isHistoryRoad: true,
+                    isLegendary: false
+                });
+            }],
         // Basic bit "lazy" notation
         ["<li>,1;</li>",
             (rawName) => {
