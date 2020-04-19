@@ -24,6 +24,7 @@ describe("Parse function", () => {
         expect(result.bits.length).to.equal(3);
         expect(result.bits[1]).to.eql({
             name: "Aerosmith is late for the show",
+            altName: null,
             episode: 1,
             timeCd: {
                 secs: 30,

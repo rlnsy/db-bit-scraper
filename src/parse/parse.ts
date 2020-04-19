@@ -33,6 +33,7 @@ interface NameContent {
 }
 
 function parseName(n: string): NameContent {
+    // TODO modify to extract all links
     let name = n;
     let links: string[] = [];
     const linkFmt = new RegExp("<a href=\".+\" rel=\"nofollow\">.+</a>", 's');
@@ -58,13 +59,14 @@ function parseName(n: string): NameContent {
 interface PartialBitInfo {
     episode: number,
     rawName: string,
+    rawAltName: string | null,
     rawTimeCd: string | null,
     isHistoryRoad: boolean,
     isLegendary: boolean
 }
 
 function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
-    const { episode, rawName, rawTimeCd, isHistoryRoad, isLegendary } = i;
+    const { episode, rawName, rawAltName, rawTimeCd, isHistoryRoad, isLegendary } = i;
     let timeCd: BitTimeCode | null = null;
     if (rawTimeCd != null) {
         const getTime = parseTimeCode(rawTimeCd);
@@ -75,20 +77,46 @@ function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
         }
     }
     const {name, links} = parseName(rawName);
-    return result<ParseBitData>({
-        name, episode, timeCd, isHistoryRoad, isLegendary, links
-    });
+    if (rawAltName != null) {
+        const altNameInfo = parseName(rawAltName);
+        return result<ParseBitData>({
+            name, 
+            altName: altNameInfo.name,
+            episode, timeCd, isHistoryRoad, isLegendary, 
+            links: links.concat(altNameInfo.links)
+        });
+    } else {
+        return result<ParseBitData>({
+            name, 
+            altName: null,
+            episode, timeCd, isHistoryRoad, isLegendary, 
+            links: links
+        });
+    }
 }
 
 function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
     const content = `<li>${p5.serialize(b)}</li>`;
     return match(content, [
         // Lengendary bit format
-        ["<li><strong>,2;</strong> <strong>,1;</strong></li>",
+        ["<li><strong>,2;</strong> <strong>,1;</strong>\\s*</li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName,
+                    rawAltName: null, 
+                    rawTimeCd,
+                    isHistoryRoad: false,
+                    isLegendary: true
+                });
+            }],
+        // Lengendary with alternate bit name
+        ["<li><strong>,2;</strong> <strong>,1;</strong>\\s*/ ,</li>",
             (rawName, rawTimeCd) => {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
+                    rawAltName: null,
                     isHistoryRoad: false,
                     isLegendary: true
                 });
@@ -99,6 +127,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
+                    rawAltName: null, 
                     isHistoryRoad: false,
                     isLegendary: false
                 });
@@ -110,6 +139,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     episode,
                     rawName,
                     rawTimeCd: null,
+                    rawAltName: null, 
                     isHistoryRoad: true,
                     isLegendary: true
                 });
@@ -121,6 +151,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     episode,
                     rawName,
                     rawTimeCd: null,
+                    rawAltName: null, 
                     isHistoryRoad: true,
                     isLegendary: false
                 });
@@ -131,6 +162,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
+                    rawAltName: null, 
                     isHistoryRoad: true,
                     isLegendary: false
                 });
@@ -142,6 +174,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     episode,
                     rawName,
                     rawTimeCd: null,
+                    rawAltName: null, 
                     isHistoryRoad: false,
                     isLegendary: false
                 });
@@ -152,6 +185,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
+                    rawAltName: null, 
                     isHistoryRoad: false,
                     isLegendary: true
                 });
@@ -162,6 +196,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
+                    rawAltName: null, 
                     isHistoryRoad: false,
                     isLegendary: true
                 });

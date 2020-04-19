@@ -10,6 +10,7 @@ export interface BitTimeCode {
 
 export interface ParseBitData {
     name: string,
+    altName: string | null,
     episode: number,
     timeCd: BitTimeCode | null,
     isHistoryRoad: boolean,
