@@ -22,53 +22,83 @@ function parseTimeCode(t: string): Maybe<BitTimeCode> {
     ]);
 }
 
-interface NameContent {
-    name: string,
+interface LinksRemoved {
+    content: string,
     links: string[]
 }
 
-function parseName(n: string): NameContent {
+function extractLinks(b: string): LinksRemoved {
     // TODO modify to extract all links
-    let name = n;
-    let links: string[] = [];
+    let content = b;
     const linkFmt = new RegExp("\\s*<a\\s*href=\".+\" rel=\"nofollow\">.+</a>", 's');
-    const linkMatch = linkFmt.exec(n);
+    let links: string[] = [];
+    const linkMatch = linkFmt.exec(content);
     if (linkMatch) {
         const linkContent = linkMatch[0];
         match(linkContent, [
             ["<a href=\",1;\" rel=\"nofollow\">,2;</a>",
                 (url: string, text: string) => {
-                    name = n.replace(linkFmt, text);
-                    name = match(name, [
-                        ["<strong>,1;</strong>",
-                            (bolded) => {
-                                return bolded;
-                            }],
-                        [_, () => { return name; }]
-                    ]);
                     links.push(url);
+                    content = content.replace(linkFmt, text);
                 }]
         ]);
     }
-    const cleanName = name.trim().replace(/\s{2,}|\n/, ' ');
+    return { content, links };
+}
+
+function cleanNameContent(name: string): string {
+    name = match(name, [
+        ["<strong>,1;</strong>",
+            (text) => {
+                return text;
+            }],
+        [_, () => { return name; }]
+    ]);
+    return name.trim().replace(/\s{2,}|\n/, ' ');
+}
+
+interface NameContent {
+    name: string,
+    altName: string | null
+}
+
+function parseName(n: string): NameContent {
+    let name = n;
+    let altName: string | null = null;
+    name = match(name, [
+        ["\s*,1;\\s+/\\s+,2;", 
+            (main, alt) => {
+                altName = alt;
+                return main;
+            }],
+        [_, () => { return name; }]
+    ]);
+    const cleanName = cleanNameContent(name);
     const susChars = new RegExp("<|>");
     if (susChars.exec(cleanName)) {
         log(Levels.WARN, `Computed name "${cleanName}" contains suspicious characters`);
     }
-    return { name: cleanName, links };
+    if (altName != null) {
+        const cleanAltName = cleanNameContent(altName as string);
+        if (susChars.exec(cleanAltName)) {
+            log(Levels.WARN, `Computed alt name "${cleanAltName}" contains suspicious characters`);
+        }
+        altName = cleanAltName;
+    }
+    return { name: cleanName, altName };
 }
 
 interface PartialBitInfo {
     episode: number,
     rawName: string,
-    rawAltName: string | null,
     rawTimeCd: string | null,
     isHistoryRoad: boolean,
-    isLegendary: boolean
+    isLegendary: boolean,
+    links: string[]
 }
 
 function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
-    const { episode, rawName, rawAltName, rawTimeCd, isHistoryRoad, isLegendary } = i;
+    const { episode, rawName, rawTimeCd, isHistoryRoad, isLegendary, links } = i;
     let timeCd: BitTimeCode | null = null;
     if (rawTimeCd != null) {
         const getTime = parseTimeCode(rawTimeCd);
@@ -78,36 +108,27 @@ function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
             timeCd = (getTime as Result<BitTimeCode>).success;
         }
     }
-    const {name, links} = parseName(rawName);
-    if (rawAltName != null) {
-        const altNameInfo = parseName(rawAltName);
-        return result<ParseBitData>({
-            name, 
-            altName: altNameInfo.name,
-            episode, timeCd, isHistoryRoad, isLegendary, 
-            links: links.concat(altNameInfo.links)
-        });
-    } else {
-        return result<ParseBitData>({
-            name, 
-            altName: null,
-            episode, timeCd, isHistoryRoad, isLegendary, 
-            links: links
-        });
-    }
+    const {name, altName} = parseName(rawName);
+    return result<ParseBitData>({
+        name, 
+        altName,
+        episode, timeCd, isHistoryRoad, isLegendary, 
+        links: links
+    });
 }
 
 export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData> {
-    return match(b, [
+    let {content, links} = extractLinks(b);
+    return match(content, [
         // history road with timecode case
         ["<li><strong>,2;</strong>\\s*<em>HR:</em>,1;</li>",
             (rawName, rawTimeCd) => {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
-                    rawAltName: null, 
                     isHistoryRoad: true,
-                    isLegendary: false
+                    isLegendary: false,
+                    links
                 });
             }],
         // Lengendary bit format
@@ -116,24 +137,13 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                 return parsePartialBitInfo({
                     episode,
                     rawName,
-                    rawAltName: null, 
                     rawTimeCd,
                     isHistoryRoad: false,
-                    isLegendary: true
+                    isLegendary: true,
+                    links
                 });
             }],
-        // Lengendary with alternate bit name
-        ["<li><strong>,2;</strong> <strong>,1;</strong>\\s*/ ,2;</li>",
-            (rawName, rawAltName, rawTimeCd) => {
-                return parsePartialBitInfo({
-                    episode,
-                    rawName, rawTimeCd,
-                    rawAltName,
-                    isHistoryRoad: false,
-                    isLegendary: true
-                });
-            }],
-        // case where name contains strong tags
+        //case where name contains strong tags
         ["<li><strong>,1;</strong>\\s*.*<strong>.*</strong>.*</li>",
             (rawTimeCd) => {
                 const noTimeCd = b.replace(
@@ -146,9 +156,9 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                             return parsePartialBitInfo({
                                 episode,
                                 rawName, rawTimeCd,
-                                rawAltName: null, 
                                 isHistoryRoad: false,
-                                isLegendary: true
+                                isLegendary: true,
+                                links
                             });
                         }]
                     ]);
@@ -159,9 +169,9 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
-                    rawAltName: null, 
                     isHistoryRoad: false,
-                    isLegendary: false
+                    isLegendary: false,
+                    links
                 });
             }],
         // Legendary History Road
@@ -171,21 +181,21 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                     episode,
                     rawName,
                     rawTimeCd: null,
-                    rawAltName: null, 
                     isHistoryRoad: true,
-                    isLegendary: true
+                    isLegendary: true,
+                    links
                 });
             }],
         // Non-Legendary History Road
-        ["<li><em>HR:</em> ,1;</li>",
+        ["<li><em>HR:</em>\\s*,1;</li>",
             (rawName) => {
                 return parsePartialBitInfo({
                     episode,
                     rawName,
                     rawTimeCd: null,
-                    rawAltName: null, 
                     isHistoryRoad: true,
-                    isLegendary: false
+                    isLegendary: false,
+                    links
                 });
             }],
         // other history road with timecode case
@@ -194,9 +204,9 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
-                    rawAltName: null, 
                     isHistoryRoad: true,
-                    isLegendary: false
+                    isLegendary: false,
+                    links
                 });
             }],
         // Basic bit "lazy" notation
@@ -206,9 +216,9 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                     episode,
                     rawName,
                     rawTimeCd: null,
-                    rawAltName: null, 
                     isHistoryRoad: false,
-                    isLegendary: false
+                    isLegendary: false,
+                    links
                 });
             }],
         // strange malformed case - TODO this could benefit from some new match features
@@ -217,9 +227,9 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
-                    rawAltName: null, 
                     isHistoryRoad: false,
-                    isLegendary: true
+                    isLegendary: true,
+                    links
                 });
             }],
         // same here
@@ -228,9 +238,9 @@ export function parseBitFragment(b: string, episode: number): Maybe<ParseBitData
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
-                    rawAltName: null, 
                     isHistoryRoad: false,
-                    isLegendary: true
+                    isLegendary: true,
+                    links
                 });
             }],
         // Default

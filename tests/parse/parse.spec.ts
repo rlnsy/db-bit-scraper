@@ -148,4 +148,12 @@ describe("Parse function", () => {
         expect(b.name).to.eql("Victorian illustration of kidney stone removal");
     });
 
+    it("Should extract an alternate name if it exists", () => {
+        const result = parseFile("content/alt-name.html");
+        expect(result.bits.length).to.equal(1);
+        const b = result.bits[0];
+        expect(b.name).to.equal("Too much water in my moublblblb, pt. VI");
+        expect(b.altName).to.equal("Robot doctor pt. II");
+    });
+
 });
