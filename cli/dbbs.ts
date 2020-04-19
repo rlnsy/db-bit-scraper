@@ -22,7 +22,7 @@ const execute = (content: string) => {
 const args = process.argv;
 const flag = args[2];
 
-process.env.DBBS_GLOSSARY_URL = "https://www.reddit.com/r/DynamicBanter/wiki/index/bitglossary#wiki_episodes_51-60";
+process.env.DBBS_GLOSSARY_URL = "https://www.reddit.com/r/DynamicBanter/wiki/index/bitglossary";
 
 if (flag == "--get") {
     getGlossaryContent()
