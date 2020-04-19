@@ -2,6 +2,7 @@ import { ParseData, ParseEpisodeData, ParseBitData } from "./parse-data";
 import { Maybe, error, result, Result, Error } from "../result";
 import * as p5 from 'parse5';
 import { parseBitFragment } from "./bit-format";
+import {log, Levels} from '../logging/logging';
 
 function structuralNodes(n: any) {
     return n.childNodes.filter((n: any) => n.nodeName != '#text');
@@ -126,6 +127,7 @@ function check(n: any): Maybe<ParseData> {
 }
 
 export function parse(content: string): Maybe<ParseData> {
+    log(Levels.INFO, "Parsing content");
     let episodes: ParseEpisodeData[] = [];
     let bits: ParseBitData[] = [];
     const doc: p5.DefaultTreeDocument = p5.parse(content) as p5.DefaultTreeDocument;
