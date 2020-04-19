@@ -36,7 +36,7 @@ function parseName(n: string): NameContent {
     // TODO modify to extract all links
     let name = n;
     let links: string[] = [];
-    const linkFmt = new RegExp("<a href=\".+\" rel=\"nofollow\">.+</a>", 's');
+    const linkFmt = new RegExp("<a\\s*href=\".+\" rel=\"nofollow\">.+</a>", 's');
     const linkMatch = linkFmt.exec(n);
     if (linkMatch) {
         const linkContent = linkMatch[0];
@@ -122,7 +122,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 });
             }],
         // Regular bit
-        ["<li><strong>,2;</strong> ,1;</li>",
+        ["<li><strong>,2;</strong>\\s*,1;</li>",
             (rawName, rawTimeCd) => {
                 return parsePartialBitInfo({
                     episode,
