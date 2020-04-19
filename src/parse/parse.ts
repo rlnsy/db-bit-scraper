@@ -111,12 +111,12 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                 });
             }],
         // Lengendary with alternate bit name
-        ["<li><strong>,2;</strong> <strong>,1;</strong>\\s*/ ,</li>",
-            (rawName, rawTimeCd) => {
+        ["<li><strong>,2;</strong> <strong>,1;</strong>\\s*/ ,2;</li>",
+            (rawName, rawAltName, rawTimeCd) => {
                 return parsePartialBitInfo({
                     episode,
                     rawName, rawTimeCd,
-                    rawAltName: null,
+                    rawAltName,
                     isHistoryRoad: false,
                     isLegendary: true
                 });
