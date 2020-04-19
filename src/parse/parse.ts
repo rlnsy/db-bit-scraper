@@ -98,6 +98,17 @@ function parsePartialBitInfo(i: PartialBitInfo): Maybe<ParseBitData> {
 function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
     const content = `<li>${p5.serialize(b)}</li>`;
     return match(content, [
+        // history road with timecode case
+        ["<li><strong>,2;</strong>\\s*<em>HR:</em>,1;</li>",
+            (rawName, rawTimeCd) => {
+                return parsePartialBitInfo({
+                    episode,
+                    rawName, rawTimeCd,
+                    rawAltName: null, 
+                    isHistoryRoad: true,
+                    isLegendary: false
+                });
+            }],
         // Lengendary bit format
         ["<li><strong>,2;</strong> <strong>,1;</strong>\\s*</li>",
             (rawName, rawTimeCd) => {
@@ -156,7 +167,7 @@ function parseBitFragment(b: any, episode: number): Maybe<ParseBitData> {
                     isLegendary: false
                 });
             }],
-        // history road with timecode case
+        // other history road with timecode case
         ["<li><em>,2; HR:</em>,1;</li>",
             (rawName, rawTimeCd) => {
                 return parsePartialBitInfo({
