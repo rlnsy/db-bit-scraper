@@ -44,5 +44,5 @@ function formatLevel(l: Levels): string {
 }
 
 export function log(level: Levels, msg: string): void {
-    console.log(`${formatDate()} ${formatLevel(level)} ${msg}`);
+    process.stderr.write(`${formatDate()} ${formatLevel(level)}\n${msg}\n`);
 }

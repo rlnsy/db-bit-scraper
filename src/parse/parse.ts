@@ -2,6 +2,7 @@ import { ParseData, ParseEpisodeData, ParseBitData, BitTimeCode } from "./parse-
 import { Maybe, error, result, Result, Error } from "../result";
 import * as p5 from 'parse5';
 import { _, match } from 'jmatch';
+import {log, Levels} from '../logging/logging';
 
 function structuralNodes(n: any) {
     return n.childNodes.filter((n: any) => n.nodeName != '#text');
@@ -46,7 +47,12 @@ function parseName(n: string): NameContent {
                 }]
         ]);
     }
-    return { name: name.trim().replace(/\s{2,}|\n/, ' '), links };
+    const cleanName = name.trim().replace(/\s{2,}|\n/, ' ');
+    const susChars = new RegExp("<|>");
+    if (susChars.exec(cleanName)) {
+        log(Levels.WARN, `Computed name "${cleanName}" contains suspicious characters`);
+    }
+    return { name: cleanName, links };
 }
 
 interface PartialBitInfo {
