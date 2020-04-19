@@ -126,7 +126,7 @@ function check(n: any): Maybe<ParseData> {
     }
 }
 
-export function parse(content: string): Maybe<ParseData> {
+export function parse(content: string, strackTraversal=false): Maybe<ParseData> {
     log(Levels.INFO, "Parsing content");
     let episodes: ParseEpisodeData[] = [];
     let bits: ParseBitData[] = [];
@@ -134,7 +134,7 @@ export function parse(content: string): Maybe<ParseData> {
     let nodes: any[] = [doc];
     let cur = null;
     while (nodes.length > 0) {
-        cur = nodes.pop();
+        cur = strackTraversal ? nodes.pop() : nodes.shift();
         const res = check(cur);
         if (res.success) {
             res.success.episodes.forEach((e: ParseEpisodeData) => {

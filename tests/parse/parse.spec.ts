@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import 'mocha';
 import {parse} from '../../src/parse/parse';
-import { ParseData, ParseBitData } from '../../src/parse/parse-data';
+import { ParseData, ParseBitData, ParseEpisodeData } from '../../src/parse/parse-data';
 import { Maybe, Result } from '../../src/result';
 import readContent from '../../src/util/read';
 
@@ -120,7 +120,10 @@ describe("Parse function", () => {
         const result = parseFile("content/sample-bit-glossary-4-16-20.html");
         let missing: number[] = [];
         let prev = 0;
-        result.episodes.reverse().forEach((e) => {
+        const sorted = result.episodes.sort((a: ParseEpisodeData, b:ParseEpisodeData) => {
+            return a.num < b.num ? -1 : 1;
+        });
+        sorted.forEach((e) => {
             const num = e.num;
             if (num != prev + 1) {
                 missing.push(prev + 1);
