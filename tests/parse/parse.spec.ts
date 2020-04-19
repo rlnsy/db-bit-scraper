@@ -3,7 +3,7 @@ import 'mocha';
 import {parse} from '../../src/parse/parse';
 import { ParseData, ParseBitData } from '../../src/parse/parse-data';
 import { Maybe, Result } from '../../src/result';
-import readContent from '../util/../../util/read';
+import readContent from '../../src/util/read';
 
 function parseFile(file: string, allowError = false): ParseData {
     const content: string = (readContent(__dirname, file, () => {
