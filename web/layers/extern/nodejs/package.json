@@ -1,0 +1,14 @@
+{
+  "name": "nodejs",
+  "version": "0.0.0",
+  "description": "External dependency layer for dbbs",
+  "author": "Rowan Lindsay",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@types/parse5": "^5.0.2",
+    "axios": "^0.19.2",
+    "chalk": "^4.0.0",
+    "jmatch": "^0.2.0",
+    "parse5": "^6.0.0"
+  }
+}
