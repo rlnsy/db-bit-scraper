@@ -5,6 +5,7 @@ import { ParseData } from '../src/parse/parse-data';
 import { Maybe, Result } from '../src/result';
 import {getGlossaryContent} from '../src/get/get';
 import {log, Levels} from '../src/logging/logging';
+import {parseNewWebContent} from '../src/web/handler';
 
 const execute = (content: string) => {
     const doParse: Maybe<ParseData> = parse(content);
@@ -29,6 +30,17 @@ if (flag == "--get") {
         .then((content) => {
             execute(content);
         });
+} else if (flag == "--test-lambda") {
+    if (args.length < 4) {
+        throw new Error("Missing argument for output bucket");
+    } else {
+        process.env.OUTPUT_BUCKET_NAME = args[3];
+        parseNewWebContent()
+        .then((result) => {
+            console.log(result);
+            process.exit();
+        });
+    }
 }
 
 const input = process.stdin;
