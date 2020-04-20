@@ -30,11 +30,13 @@ export const parseNewWebContent = async (event: any = { }): Promise<any> => {
                 if (time == null) {
                     throw new Error("Parse output missing timestamp");
                 }
-                const outputName: string = `parsed-${time as string}`;
+                const outputName: string = `parsed-${time as string}.json`;
                 const res = await new AWS.S3().putObject({
                     Bucket: outputBucket,
-                    Key: outputName
+                    Key: outputName,
+                    Body: Buffer.from(JSON.stringify(output))
                 }).promise();
+                log(Levels.INFO, "Bucket operation completed");
                 return {
                     statusCode: 200,
                     message: `Information saved in bucket as ${outputName}`
