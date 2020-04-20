@@ -34,7 +34,7 @@ export const parseNewWebContent = async (event: any = { }): Promise<any> => {
                 const res = await new AWS.S3().putObject({
                     Bucket: outputBucket,
                     Key: outputName,
-                    Body: Buffer.from(JSON.stringify(output))
+                    Body: Buffer.from(JSON.stringify(output, null, 2))
                 }).promise();
                 log(Levels.INFO, "Bucket operation completed");
                 return {
