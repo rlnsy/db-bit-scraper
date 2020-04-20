@@ -1,6 +1,6 @@
 import {Stack, App, Fn, Duration} from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda';
-import * as iam from '@aws-cdk/aws-iam';
+import * as s3 from '@aws-cdk/aws-s3';
 
 export class BitScraperStack extends Stack {
     constructor(app: App, id: string) {
@@ -27,10 +27,7 @@ export class BitScraperStack extends Stack {
             layers: [externalDependencies],
             timeout: Duration.seconds(10)
         });
-        scraper.role?.addToPolicy(
-            new iam.PolicyStatement({
-                actions: ['s3:*'],
-                resources: [outputBucketArn]
-            }));
+        const output = s3.Bucket.fromBucketArn(this, 'outputBucket', outputBucketArn);
+        output.grantWrite(scraper);
     }
 }
