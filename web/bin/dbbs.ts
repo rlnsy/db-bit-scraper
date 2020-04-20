@@ -1,6 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import {BitScraperStack} from "../lib/bit-scraper-stack";
 import {StorageStack} from "../lib/storage-stack";
+import {SchedulerStack} from "../lib/scheduler-stack";
 
 /**
  * Define the stacks making up the app
@@ -13,3 +14,4 @@ import {StorageStack} from "../lib/storage-stack";
 const app = new cdk.App();
 new BitScraperStack(app, 'scraper');
 new StorageStack(app, "storage");
+new SchedulerStack(app, "scheduler");

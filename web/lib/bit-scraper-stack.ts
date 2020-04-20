@@ -1,4 +1,4 @@
-import {Stack, App, Fn, Duration} from '@aws-cdk/core';
+import {Stack, App, Fn, Duration, CfnOutput} from '@aws-cdk/core';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as s3 from '@aws-cdk/aws-s3';
 
@@ -29,5 +29,10 @@ export class BitScraperStack extends Stack {
         });
         const output = s3.Bucket.fromBucketArn(this, 'outputBucket', outputBucketArn);
         output.grantWrite(scraper);
+        const functionARNKey = 'scraperFunctionArn';
+        new CfnOutput(this, functionARNKey, {
+            value: scraper.functionArn,
+            exportName: functionARNKey
+        });
     }
 }

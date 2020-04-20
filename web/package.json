@@ -8,6 +8,7 @@
   "author": "Rowan Lindsay",
   "license": "MIT",
   "dependencies": {
+    "@aws-cdk/aws-events-targets": "^1.33.1",
     "@aws-cdk/aws-lambda": "^1.33.1",
     "@aws-cdk/aws-s3": "^1.33.1",
     "@aws-cdk/core": "^1.33.1",
