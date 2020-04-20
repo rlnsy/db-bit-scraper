@@ -4,3 +4,4 @@ node_modules
 **/*.d.ts
 out/*
 !out/.gitkeep
+tests/parse/content/sample-bit-glossary-4-16-20.html
