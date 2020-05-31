@@ -12,11 +12,12 @@ export class SchedulerStack extends Stack {
         const scraperFunction = lambda.Function.fromFunctionArn(this,
             'scraperFunction',
             Fn.importValue('scraperFunctionArn'));
+        const invoke = new LambdaFunction(scraperFunction);
         const scheduler = new Rule(this, 'DBBS-Scraper-Schedule', {
             description: "Runs DBBS scraper function on a constant interval",
             enabled: true,
             schedule: Schedule.rate(Duration.hours(12)),
-            targets: [new LambdaFunction(scraperFunction)]
+            targets: [invoke]
         });
     }
 }
