@@ -11,6 +11,11 @@ import {log, Levels} from '../logging/logging';
 import * as AWS from 'aws-sdk';
 
 export const parseNewWebContent = async (event: any = { }): Promise<any> => {
+    if (event['invoke_type']) {
+        log(Levels.INFO, `Invoked: ${event['invoke_type']}`);
+    } else {
+        log(Levels.WARN, "No invoke type provided");
+    }
     const outputBucket = process.env.OUTPUT_BUCKET_NAME;
     const contentURL = process.env.DBBS_GLOSSARY_URL;
     if (!outputBucket) {
@@ -36,6 +41,7 @@ export const parseNewWebContent = async (event: any = { }): Promise<any> => {
                     Key: outputName,
                     Body: Buffer.from(JSON.stringify(output, null, 2))
                 }).promise();
+                log(Levels.INFO, res.toString());
                 log(Levels.INFO, "Bucket operation completed");
                 return {
                     statusCode: 200,
